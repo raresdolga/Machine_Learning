@@ -67,34 +67,59 @@ Theta2_grad = zeros(size(Theta2));
 % =========================================================================   
 %forward propagation
     X = [ones(size(X,1),1) X];
-    In = X';
-    a = sigmoid(Theta1*(X'));
+   %one on the first column 
+    a2 = sigmoid(Theta1*X');
     % reshape in the expected form + add bias unit
-    a = [ones(1,size(a,2)); a];
+    a2 = [ones(1,size(a2,2)); a2];
     % compute the output unit
-    o = sigmoid(Theta2*a);
+    o = sigmoid(Theta2*a2);
     % make y in the appropriate form woth 0 and 1s
     Y = zeros(num_labels,num_labels);
-    for i = 1 : num_labels
-        Y(i,i) = 1; 
+     for i = 1 : num_labels
+         Y(i,i) = 1; 
     end
- 
     % compute cost J just from the output layer(this is the only needed)
-   sum1 = 0;
+% I = eye(num_labels);
+% Y = zeros(m, num_labels);
+% for i = 1 : m
+%   Y(i, :) = I(y(i), :);
+% end
+    sum1 = 0;
     for i = 1 : m
-     %   for j =1 : num_labels
-            sum1 = sum1 + helperLog(o(:,i),Y(:,y(i)));
+          sum1 = sum1 + helperLog(o(:,i),Y(y(i),:)');
     end
     J = (-1/m)*sum1;
-   
     %implement back propagation
+    D1 = zeros(size(Theta1));
+    D2 = zeros(size(Theta2));
     for i = 1 : m
-     delta3 = o(:,i) - Y(:,y(i));
+     delta3 = o(:,i) - Y(y(i),:)';
      %display([size((Theta2')*delta3);size(o(:,i).*(1-o(:,i)))]);
-     delta2 = ((Theta2')*delta3).*(a(:,i).*(1-a(:,i)));  
-     Theta2_grad = Theta2_grad + delta3*a(:,i)';
-     Theta1_grad = Theta1_grad + delta2(2,:)*In(:,i)';
+     a2b = a2(1:end,i);
+     a1 = X(i,:)';
+     delta2 = ((Theta2)'*delta3).*(a2b.*(1-a2b)); 
+     
+     D1 = D1 + delta2(2:end)*a1';
+     D2 = D2 + delta3*a2b';
     end
+%     delta3 = o - Y';
+%  
+%      a2b = a2;
+%      a1 = X';
+%      delta2 = ((Theta2)'*delta3).*(a2b.*(1-a2b)); 
+%      D1 = D1 + delta2(2:end,:)*a1';
+%      D2 = D2 + delta3*a2b';
+    % eliminate bias unit
+    Theta1_grad = (Theta1_grad+D1)*(1/m);
+    Theta2_grad = (Theta2_grad+D2)*(1/m);
+    
+    %regulized cost function
+    regulized = sum(sum(Theta2(:,2:end).^2))+sum(sum(Theta1(:,2:end).^2));
+    J = J + (lambda/(2*m))*regulized;
+    regulized_theta1 = (Theta1(:,2:end));
+    regulized_theta2 = Theta2(:,2:end);
+    Theta1_grad(:,2:end) = Theta1_grad(:,2:end) + (lambda/m)*regulized_theta1;   
+    Theta2_grad(:,2:end) = Theta2_grad(:,2:end)+(lambda/m)*regulized_theta2;
     % Unroll gradients
     grad = [Theta1_grad(:) ; Theta2_grad(:)];
 
