@@ -69,6 +69,7 @@ Theta2_grad = zeros(size(Theta2));
     X = [ones(size(X,1),1) X];
    %one on the first column 
     a2 = sigmoid(Theta1*X');
+    print a2;
     % reshape in the expected form + add bias unit
     a2 = [ones(1,size(a2,2)); a2];
     % compute the output unit
